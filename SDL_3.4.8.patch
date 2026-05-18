@@ -1,0 +1,53 @@
+diff --git a/include/SDL3/SDL_events.h b/include/SDL3/SDL_events.h
+index 398c67709..fd1ff7043 100644
+--- a/include/SDL3/SDL_events.h
++++ b/include/SDL3/SDL_events.h
+@@ -1636,6 +1636,12 @@ extern SDL_DECLSPEC SDL_Window * SDLCALL SDL_GetWindowFromEvent(const SDL_Event
+  */
+ extern SDL_DECLSPEC int SDLCALL SDL_GetEventDescription(const SDL_Event *event, char *buf, int buflen);
+ 
++extern SDL_DECLSPEC void SDLCALL SDL_SendMouseMotion(Uint64 timestamp, SDL_Window *window, SDL_MouseID mouseID, bool relative, float x, float y);
++
++extern SDL_DECLSPEC void SDLCALL SDL_SendMouseButton(Uint64 timestamp, SDL_Window *window, SDL_MouseID mouseID, Uint8 button, bool down);
++
++extern SDL_DECLSPEC bool SDLCALL SDL_SendKeyboardKey(Uint64 timestamp, SDL_KeyboardID keyboardID, int rawcode, SDL_Scancode scancode, bool down);
++
+ /* Ends C function definitions when using C++ */
+ #ifdef __cplusplus
+ }
+diff --git a/src/dynapi/SDL_dynapi.sym b/src/dynapi/SDL_dynapi.sym
+index ec2e97beb..85e406002 100644
+--- a/src/dynapi/SDL_dynapi.sym
++++ b/src/dynapi/SDL_dynapi.sym
+@@ -1271,6 +1271,9 @@ SDL3_0.0.0 {
+     SDL_LoadSurface_IO;
+     SDL_LoadSurface;
+     SDL_SetWindowFillDocument;
++    SDL_SendMouseMotion;
++    SDL_SendMouseButton;
++    SDL_SendKeyboardKey;
+     # extra symbols go here (don't modify this line)
+   local: *;
+ };
+diff --git a/src/dynapi/SDL_dynapi_overrides.h b/src/dynapi/SDL_dynapi_overrides.h
+index bf8d64273..f542eca42 100644
+--- a/src/dynapi/SDL_dynapi_overrides.h
++++ b/src/dynapi/SDL_dynapi_overrides.h
+@@ -1297,3 +1297,6 @@
+ #define SDL_LoadSurface_IO SDL_LoadSurface_IO_REAL
+ #define SDL_LoadSurface SDL_LoadSurface_REAL
+ #define SDL_SetWindowFillDocument SDL_SetWindowFillDocument_REAL
++#define SDL_SendMouseMotion SDL_SendMouseMotion_REAL
++#define SDL_SendMouseButton SDL_SendMouseButton_REAL
++#define SDL_SendKeyboardKey SDL_SendKeyboardKey_REAL
+diff --git a/src/dynapi/SDL_dynapi_procs.h b/src/dynapi/SDL_dynapi_procs.h
+index 78a896a54..e3569ee35 100644
+--- a/src/dynapi/SDL_dynapi_procs.h
++++ b/src/dynapi/SDL_dynapi_procs.h
+@@ -1305,3 +1305,6 @@ SDL_DYNAPI_PROC(SDL_Surface*,SDL_RotateSurface,(SDL_Surface *a,float b),(a,b),re
+ SDL_DYNAPI_PROC(SDL_Surface*,SDL_LoadSurface_IO,(SDL_IOStream *a,bool b),(a,b),return)
+ SDL_DYNAPI_PROC(SDL_Surface*,SDL_LoadSurface,(const char *a),(a),return)
+ SDL_DYNAPI_PROC(bool,SDL_SetWindowFillDocument,(SDL_Window *a,bool b),(a,b),return)
++SDL_DYNAPI_PROC(void,SDL_SendMouseMotion,(Uint64 a,SDL_Window *b,SDL_MouseID c,bool d,float e,float f),(a,b,c,d,e,f),)
++SDL_DYNAPI_PROC(void,SDL_SendMouseButton,(Uint64 a,SDL_Window *b,SDL_MouseID c,Uint8 d,bool e),(a,b,c,d,e),)
++SDL_DYNAPI_PROC(bool,SDL_SendKeyboardKey,(Uint64 a,SDL_KeyboardID b,int c,SDL_Scancode d,bool e),(a,b,c,d,e),return)
