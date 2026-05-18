@@ -34,8 +34,8 @@ $ cmake --build . --parallel
 
 This should give you a library called `libsdl3fuzz.so`.
 
-SDL3Fuzz currently does not need to be installed, and it does not come with an
-installation target.
+SDL3Fuzz currently does not come with an installation target, as it does not
+need to be installed.
 
 ## Usage
 
@@ -61,6 +61,28 @@ LD_PRELOAD=/path/to/SDL3Fuzz/build/libsdl3fuzz.so gdb ./my_application
 ```
 
 SDL3Fuzz will then continuously generate input for your application.
+
+Some environment variables can control how SDL3Fuzz behaves. Currently, only one
+option is provided:
+- `SDLFUZZ_MAX_DELAY_MS` specifies the maximum delay between two events. No
+  maximum is set by default. The minimum value is 0.
+
+## Examples
+
+Example projects to test fuzzing are located in the [examples](./examples/)
+folder. Currently, only one example is provided. To build it, add the
+`-DSDL3FUZZ_BUILD_EXAMPLES=ON` option when running CMake, then build or rebuild.
+The programs can then be found in the `examples` folder within the build
+directory.
+
+The basic program can be run directly from the build folder with
+`./examples/basic`. Can you find how to crash the program without looking the
+source code? Can you make the program crash after looking at the source code?
+
+Run with the fuzzer: `LD_PRELOAD=./libsdl3fuzz.so gdb ./examples/basic`, then
+instruct GDB to run. **This will generate flashing lights!** After a moment, GDB
+should stop on a crash. You can experiment with the `SDLFUZZ_MAX_DELAY_MS`
+environment variable to make the process quicker.
 
 ## Limitations and roadmap
 
