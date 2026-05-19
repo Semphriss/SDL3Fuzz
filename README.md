@@ -23,13 +23,16 @@ crash happens.
 
 Currently, only POSIX environments are supported.
 
-Compile and patch SDL3 using [SDL3_3.4.8.patch](./SDL3_3.4.8.patch). As the name
+Compile and patch SDL3 using [SDL_3.4.8.patch](./SDL_3.4.8.patch). As the name
 suggest, the patch is based on SDL 3.4.8. Other versions of SDL3 should work
 fine, including older versions, but they have not been tested.
 
 ```sh
+# Install the necessary development libraries as described in SDL's
+# `docs/README-linux.md` (or equivalent).
 $ git clone -b release-3.4.8 https://github.com/libsdl-org/SDL.git SDL3
 $ cd SDL3
+$ git apply /path/to/SDL3Fuzz/SDL_3.4.8.patch
 $ mkdir build && cd build
 $ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
 $ cmake --build . --parallel
