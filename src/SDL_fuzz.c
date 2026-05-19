@@ -83,7 +83,7 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
     }
 
     if (loglevel > 0) {
-        SDL_LogVerbose("Seed: %" SDL_PRIu64 "\n", seed);
+        SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
     }
 
     for (;;) {
