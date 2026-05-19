@@ -62,29 +62,41 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
 {
     SDL_Event e;
     const char *envval;
+    Uint64 seed = SDL_GetPerformanceCounter();
+    int loglevel = 0;
 
     // Wait for the app to start
     while (!SDL_WasInit(SDL_INIT_EVENTS)) {
         SDL_Delay(10);
     }
 
+    if ((envval = SDL_getenv("SDLFUZZ_SEED"))) {
+        seed = (Uint64) SDL_atoi(envval);
+    }
+
     if ((envval = SDL_getenv("SDLFUZZ_MAX_DELAY_MS"))) {
         config_max_delay_ms = (Uint32) SDL_atoi(envval);
     }
 
-    SDL_srand(0);
+    if ((envval = SDL_getenv("SDLFUZZ_LOGLEVEL"))) {
+        loglevel = SDL_atoi(envval);
+    }
+
+    if (loglevel > 0) {
+        SDL_LogVerbose("Seed: %" SDL_PRIu64 "\n", seed);
+    }
 
     for (;;) {
-        SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf()), config_max_delay_ms));
+        SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf_r(&seed)), config_max_delay_ms));
 
         if (!SDL_RunOnMainThread(SDLFuzz_FetchInfo, NULL, true) || !fetched) {
             continue;
         }
 
-        switch (SDL_rand(3)) {
+        switch (SDL_rand_r(&seed, 3)) {
         case 0:
             {
-                int button = SDL_rand(5) + 1;
+                int button = SDL_rand_r(&seed, 5) + 1;
                 SDL_SendMouseButton(SDL_GetTicksNS(), target_window,
                                     SDL_GLOBAL_MOUSE_ID, button, true);
                 SDL_SendMouseButton(SDL_GetTicksNS(), target_window,
@@ -95,16 +107,17 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
         case 1:
             SDL_SendMouseMotion(SDL_GetTicksNS(), target_window,
                                 SDL_GLOBAL_MOUSE_ID, false,
-                                SDL_rand(window_w), SDL_rand(window_h));
+                                SDL_rand_r(&seed, window_w),
+                                SDL_rand_r(&seed, window_h));
             break;
 
         case 2:
             {
-                int rawcode = SDL_rand(256);
-                SDL_Scancode scancode = SDL_rand(100);
-                if (SDL_rand(2)) {
+                int rawcode = SDL_rand_r(&seed, 256);
+                SDL_Scancode scancode = SDL_rand_r(&seed, 100);
+                if (SDL_rand_r(&seed, 2)) {
                     SDL_SendKeyboardKey(SDL_GetTicksNS(), SDL_GLOBAL_KEYBOARD_ID,
-                                        rawcode, scancode, SDL_rand(2));
+                                        rawcode, scancode, SDL_rand_r(&seed, 2));
                 } else {
                     SDL_SendKeyboardKey(SDL_GetTicksNS(), SDL_GLOBAL_KEYBOARD_ID,
                                         rawcode, scancode, true);

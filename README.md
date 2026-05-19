@@ -77,10 +77,13 @@ SDL3Fuzz will then continuously generate input for your application.
 If you see an issue about missing symbols, make sure that the dynamic linker
 uses the patched version of SDL.
 
-Some environment variables can control how SDL3Fuzz behaves. Currently, only one
-option is provided:
+Some environment variables can control how SDL3Fuzz behaves:
 - `SDLFUZZ_MAX_DELAY_MS` specifies the maximum delay between two events. No
   maximum is set by default. The minimum value is 0.
+- `SDLFUZZ_SEED` specifies a seed as a 64-bit unsigned integer.
+- `SDLFUZZ_LOGLEVEL` specifies what SDL3Fuzz should print. Current values are 0
+  for no logging (default) and 1 to log basic information (currently, only the
+  seed).
 
 ## Examples
 
