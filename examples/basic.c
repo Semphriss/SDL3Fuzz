@@ -16,8 +16,6 @@ int main(int argc, char **argv)
     SDL_RenderClear(r);
     SDL_RenderPresent(r);
 
-    int mode = 0;
-
     for (;;) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {

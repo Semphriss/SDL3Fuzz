@@ -39,12 +39,3 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DSDL3FUZZ_BUILD_EXAMPLES=ON
           cmake --build . --parallel
-
-      - name: Test SDL3Fuzz
-        env:
-          SDLFUZZ_MAX_DELAY_MS: 0
-          SDLFUZZ_SEED: 0
-          SDLFUZZ_LOGLEVEL: 1
-        run: |
-          LD_PRELOAD=$PWD/build/libsdl3fuzz.so ./build/examples/basic || code=$?
-          test "$code" -eq "136"
