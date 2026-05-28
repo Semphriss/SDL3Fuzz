@@ -34,13 +34,14 @@ static Uint32 config_max_delay_ms = -1;
 static SDL_Window *target_window;
 static int window_w, window_h;
 static bool fetched;
+static SDL_Mutex *mutex;
 
-static void SDLCALL SDLFuzz_FetchInfo(void *ptr)
+static void SDLFuzz_FetchInfo(void *ptr)
 {
     int window_count;
     SDL_Window **windows;
 
-    fetched = false;
+    SDL_LockMutex(mutex);
 
     windows = SDL_GetWindows(&window_count);
 
@@ -56,6 +57,20 @@ static void SDLCALL SDLFuzz_FetchInfo(void *ptr)
     }
 
     fetched = true;
+
+    SDL_UnlockMutex(mutex);
+}
+
+static int SDLCALL SDLFuzz_RunFetchThread(void *arg)
+{
+    for (;;) {
+        while (!SDL_WasInit(SDL_INIT_EVENTS)) {
+            SDL_Delay(0);
+        }
+
+        SDL_RunOnMainThread(SDLFuzz_FetchInfo, NULL, true);
+        SDL_Delay(0);
+    }
 }
 
 static int SDLCALL SDLFuzz_RunThread(void *arg)
@@ -86,10 +101,12 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
         SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
     }
 
+    while (!fetched) {
+        SDL_Delay(0);
+    }
+
     while (SDL_WasInit(SDL_INIT_EVENTS)) {
-        if (!SDL_RunOnMainThread(SDLFuzz_FetchInfo, NULL, true) || !fetched) {
-            continue;
-        }
+        SDL_LockMutex(mutex);
 
         switch (SDL_rand_r(&seed, 3)) {
         case 0:
@@ -126,6 +143,8 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
             break;
         }
 
+        SDL_UnlockMutex(mutex);
+
         SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf_r(&seed)), config_max_delay_ms));
     }
 
@@ -135,7 +154,14 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
 __attribute__((constructor))
 static void SDLFuzz_Init(void)
 {
+    mutex = SDL_CreateMutex();
+
+    fetched = false;
+
     // TODO: Check if it is safe to create threads before SDL_Init()
     SDL_Thread *thread = SDL_CreateThread(SDLFuzz_RunThread, "SDLFuzz", NULL);
     SDL_DetachThread(thread);
+
+    SDL_Thread *thread2 = SDL_CreateThread(SDLFuzz_RunFetchThread, "SDLFuzz_Fetch", NULL);
+    SDL_DetachThread(thread2);
 }
