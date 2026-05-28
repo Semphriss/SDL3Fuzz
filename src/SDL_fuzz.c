@@ -86,9 +86,7 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
         SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
     }
 
-    for (;;) {
-        SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf_r(&seed)), config_max_delay_ms));
-
+    while (SDL_WasInit(SDL_INIT_EVENTS)) {
         if (!SDL_RunOnMainThread(SDLFuzz_FetchInfo, NULL, true) || !fetched) {
             continue;
         }
@@ -127,7 +125,11 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
             }
             break;
         }
+
+        SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf_r(&seed)), config_max_delay_ms));
     }
+
+    return 0;
 }
 
 __attribute__((constructor))
