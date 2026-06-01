@@ -116,6 +116,19 @@ example:
 - An orchestrator to record and keep track of event sequences that result in a
   crash
 
+## Bugs found with SDL3Fuzz
+
+If you find bugs using SDL3Fuzz, feel free to open an issue! Please do not open
+a pull request, I prefer to write and curate the entries myself.
+
+| Project & Version | Bug(s) | SDL3Fuzz version | Discovery date | Discoverer | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Supertux 0.7.0 | https://github.com/SuperTux/supertux/issues/3811 | Before the initial commit | Early May 2026 | @Semphriss | The first issue ever found with SDL3Fuzz. |
+| Supertux 0.7.0 | https://github.com/SuperTux/supertux/issues/3807 | e1191c9 (8th commit) | 26 May 2026 | @Semphriss | |
+| Supertux 0.7.0 | https://github.com/SuperTux/supertux/issues/3808 | e1191c9 | 27 May 2026 | @Semphriss | |
+| Supertux 0.7.0 | https://github.com/SuperTux/supertux/issues/3809 | e1191c9 | 27 May 2026 | @Semphriss | |
+| Supertux 0.7.0 | https://github.com/SuperTux/supertux/issues/3810 | e1191c9 | 1 June 2026 | @Semphriss | |
+
 ## License
 
 Like SDL, SDL3Fuzz is licensed under the zlib license. See
