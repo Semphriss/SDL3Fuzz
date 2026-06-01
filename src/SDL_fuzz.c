@@ -27,21 +27,15 @@
 #define SDL_GLOBAL_KEYBOARD_ID 0
 #define SDL_DEFAULT_KEYBOARD_ID 1
 
-// Configuration options
-static Uint32 config_max_delay_ms = -1;
+static size_t config_events_per_frame = 1;
 
-// Current application status
-static SDL_Window *target_window;
-static int window_w, window_h;
-static bool fetched;
-static SDL_Mutex *mutex;
-
-static void SDLFuzz_FetchInfo(void *ptr)
+static void SDLFuzz_RunFrame(void *arg)
 {
     int window_count;
     SDL_Window **windows;
-
-    SDL_LockMutex(mutex);
+    SDL_Window *target_window;
+    int window_w, window_h;
+    Uint64 *seed = arg;
 
     windows = SDL_GetWindows(&window_count);
 
@@ -56,62 +50,11 @@ static void SDLFuzz_FetchInfo(void *ptr)
         return;
     }
 
-    fetched = true;
-
-    SDL_UnlockMutex(mutex);
-}
-
-static int SDLCALL SDLFuzz_RunFetchThread(void *arg)
-{
-    for (;;) {
-        while (!SDL_WasInit(SDL_INIT_EVENTS)) {
-            SDL_Delay(0);
-        }
-
-        SDL_RunOnMainThread(SDLFuzz_FetchInfo, NULL, true);
-        SDL_Delay(0);
-    }
-}
-
-static int SDLCALL SDLFuzz_RunThread(void *arg)
-{
-    SDL_Event e;
-    const char *envval;
-    Uint64 seed = SDL_GetPerformanceCounter();
-    int loglevel = 0;
-
-    // Wait for the app to start
-    while (!SDL_WasInit(SDL_INIT_EVENTS)) {
-        SDL_Delay(10);
-    }
-
-    if ((envval = SDL_getenv("SDLFUZZ_SEED"))) {
-        seed = (Uint64) SDL_atoi(envval);
-    }
-
-    if ((envval = SDL_getenv("SDLFUZZ_MAX_DELAY_MS"))) {
-        config_max_delay_ms = (Uint32) SDL_atoi(envval);
-    }
-
-    if ((envval = SDL_getenv("SDLFUZZ_LOGLEVEL"))) {
-        loglevel = SDL_atoi(envval);
-    }
-
-    if (loglevel > 0) {
-        SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
-    }
-
-    while (!fetched) {
-        SDL_Delay(0);
-    }
-
-    while (SDL_WasInit(SDL_INIT_EVENTS)) {
-        SDL_LockMutex(mutex);
-
-        switch (SDL_rand_r(&seed, 3)) {
+    for (size_t i = 0; i < config_events_per_frame; i++) {
+        switch (SDL_rand_r(seed, 3)) {
         case 0:
             {
-                int button = SDL_rand_r(&seed, 5) + 1;
+                int button = SDL_rand_r(seed, 5) + 1;
                 SDL_SendMouseButton(SDL_GetTicksNS(), target_window,
                                     SDL_GLOBAL_MOUSE_ID, button, true);
                 SDL_SendMouseButton(SDL_GetTicksNS(), target_window,
@@ -122,17 +65,17 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
         case 1:
             SDL_SendMouseMotion(SDL_GetTicksNS(), target_window,
                                 SDL_GLOBAL_MOUSE_ID, false,
-                                SDL_rand_r(&seed, window_w),
-                                SDL_rand_r(&seed, window_h));
+                                SDL_rand_r(seed, window_w),
+                                SDL_rand_r(seed, window_h));
             break;
 
         case 2:
             {
-                int rawcode = SDL_rand_r(&seed, 256);
-                SDL_Scancode scancode = SDL_rand_r(&seed, 100);
-                if (SDL_rand_r(&seed, 2)) {
+                int rawcode = SDL_rand_r(seed, 256);
+                SDL_Scancode scancode = SDL_rand_r(seed, 100);
+                if (SDL_rand_r(seed, 2)) {
                     SDL_SendKeyboardKey(SDL_GetTicksNS(), SDL_GLOBAL_KEYBOARD_ID,
-                                        rawcode, scancode, SDL_rand_r(&seed, 2));
+                                        rawcode, scancode, SDL_rand_r(seed, 2));
                 } else {
                     SDL_SendKeyboardKey(SDL_GetTicksNS(), SDL_GLOBAL_KEYBOARD_ID,
                                         rawcode, scancode, true);
@@ -142,26 +85,50 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
             }
             break;
         }
+    }
+}
 
-        SDL_UnlockMutex(mutex);
+static int SDLCALL SDLFuzz_RunThread(void *arg)
+{
+    SDL_Event e;
+    const char *envval;
+    Uint64 seed = SDL_GetPerformanceCounter();
+    int loglevel = 0;
 
-        SDL_Delay(SDL_min((Uint32) (10.0f / SDL_randf_r(&seed)), config_max_delay_ms));
+    if ((envval = SDL_getenv("SDLFUZZ_SEED"))) {
+        seed = (Uint64) SDL_strtoull(envval, NULL, 0);
     }
 
-    return 0;
+    if ((envval = SDL_getenv("SDLFUZZ_EVENTS_PER_FRAME"))) {
+        config_events_per_frame = (Uint32) SDL_atoi(envval);
+        if (!config_events_per_frame || config_events_per_frame > 1000000) {
+            SDL_Log("Invalid events per frame, defaulting to 1\n");
+            config_events_per_frame = 1;
+        }
+    }
+
+    if ((envval = SDL_getenv("SDLFUZZ_LOGLEVEL"))) {
+        loglevel = SDL_atoi(envval);
+    }
+
+    if (loglevel > 0) {
+        SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
+    }
+
+    for (;;) {
+        while (!SDL_WasInit(SDL_INIT_EVENTS)) {
+            SDL_Delay(0);
+        }
+
+        SDL_RunOnMainThread(SDLFuzz_RunFrame, &seed, true);
+        SDL_Delay(0);
+    }
 }
 
 __attribute__((constructor))
 static void SDLFuzz_Init(void)
 {
-    mutex = SDL_CreateMutex();
-
-    fetched = false;
-
     // TODO: Check if it is safe to create threads before SDL_Init()
     SDL_Thread *thread = SDL_CreateThread(SDLFuzz_RunThread, "SDLFuzz", NULL);
     SDL_DetachThread(thread);
-
-    SDL_Thread *thread2 = SDL_CreateThread(SDLFuzz_RunFetchThread, "SDLFuzz_Fetch", NULL);
-    SDL_DetachThread(thread2);
 }

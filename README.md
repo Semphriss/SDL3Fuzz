@@ -81,8 +81,7 @@ If you see an issue about missing symbols, make sure that the dynamic linker
 uses the patched version of SDL.
 
 Some environment variables can control how SDL3Fuzz behaves:
-- `SDLFUZZ_MAX_DELAY_MS` specifies the maximum delay between two events. No
-  maximum is set by default. The minimum value is 0.
+- `SDLFUZZ_EVENTS_PER_FRAME` specifies how many events to generate per frame.
 - `SDLFUZZ_SEED` specifies a seed as a 64-bit unsigned integer.
 - `SDLFUZZ_LOGLEVEL` specifies what SDL3Fuzz should print. Current values are 0
   for no logging (default) and 1 to log basic information (currently, only the
@@ -102,7 +101,7 @@ source code? Can you make the program crash after looking at the source code?
 
 Run with the fuzzer: `LD_PRELOAD=./libsdl3fuzz.so gdb ./examples/basic`, then
 instruct GDB to run. **This will generate flashing lights!** After a moment, GDB
-should stop on a crash. You can experiment with the `SDLFUZZ_MAX_DELAY_MS`
+should stop on a crash. You can experiment with the `SDLFUZZ_EVENTS_PER_FRAME`
 environment variable to make the process quicker.
 
 ## Limitations and roadmap
