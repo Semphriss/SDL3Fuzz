@@ -115,11 +115,11 @@ static int SDLCALL SDLFuzz_RunThread(void *arg)
         SDL_Log("Seed: %" SDL_PRIu64 "\n", seed);
     }
 
-    for (;;) {
-        while (!SDL_WasInit(SDL_INIT_EVENTS)) {
-            SDL_Delay(0);
-        }
+    while (!SDL_WasInit(SDL_INIT_EVENTS)) {
+        SDL_Delay(0);
+    }
 
+    while (SDL_WasInit(SDL_INIT_EVENTS)) {
         SDL_RunOnMainThread(SDLFuzz_RunFrame, &seed, true);
         SDL_Delay(0);
     }
