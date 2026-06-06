@@ -7,6 +7,14 @@ can be useful to experiment on and to fuzz real apps, although inefficiently.
 
 SDL3Fuzz is a personal project, and is not affiliated with SDL.
 
+- [Overview](#overview)
+- [Building](#building)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Limitations and roadmap](#limitations-and-roadmap)
+- [Bugs found with SDL3Fuzz](#bugs-found-with-sdl3fuzz)
+- [License](#license)
+
 ## Overview
 
 SDL3Fuzz is compiled as a shared library that can be dynamically loaded with
