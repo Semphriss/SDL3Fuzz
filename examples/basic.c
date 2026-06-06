@@ -1,12 +1,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-// Beware of flashing lights! This application will flash bright colors at a
-// high frequency when fuzzing.
-
 int main(int argc, char **argv)
 {
     char R = 0, G = 0, B = 0;
+    float x = 0.0f, y = 0.0f;
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *w = SDL_CreateWindow("Basic example", 640, 480, 0);
@@ -15,6 +13,8 @@ int main(int argc, char **argv)
     SDL_SetRenderDrawColor(r, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(r);
     SDL_RenderPresent(r);
+
+    SDL_HideCursor();
 
     for (;;) {
         SDL_Event e;
@@ -25,8 +25,8 @@ int main(int argc, char **argv)
                 goto quit;
 
             case SDL_EVENT_MOUSE_MOTION:
-                R = e.motion.x;
-                G = e.motion.y;
+                R = x = e.motion.x;
+                G = y = e.motion.y;
                 break;
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -36,12 +36,19 @@ int main(int argc, char **argv)
             }
         }
 
-        SDL_SetRenderDrawColor(r, R, G, B, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(r);
         SDL_SetRenderDrawColor(r, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderDebugText(r, 4, 4, "This will flash bright colors!");
+        SDL_RenderClear(r);
+
         SDL_SetRenderDrawColor(r, 255, 255, 255, SDL_ALPHA_OPAQUE);
-        SDL_RenderDebugText(r, 4, 16, "This will flash bright colors!");
+        SDL_RenderDebugTextFormat(r, 4, 4, "R = %d", R);
+        SDL_RenderDebugTextFormat(r, 4, 16, "G = %d", G);
+        SDL_RenderDebugTextFormat(r, 4, 28, "B = 255 / (R - G + 1) = %d", B);
+        SDL_RenderDebugText(r, 4, 40, "Click to update B.");
+
+        SDL_FRect rect = { x - 3.0f, y - 3.0f, 7.0f, 7.0f };
+        SDL_SetRenderDrawColor(r, R, G, B, SDL_ALPHA_OPAQUE);
+        SDL_RenderFillRect(r, &rect);
+
         SDL_RenderPresent(r);
 
         SDL_Delay(10);

@@ -108,9 +108,9 @@ The basic program can be run directly from the build folder with
 source code? Can you make the program crash after looking at the source code?
 
 Run with the fuzzer: `LD_PRELOAD=./libsdl3fuzz.so gdb ./examples/basic`, then
-instruct GDB to run. **This will generate flashing lights!** After a moment, GDB
-should stop on a crash. You can experiment with the `SDLFUZZ_EVENTS_PER_FRAME`
-environment variable to make the process quicker.
+instruct GDB to run. After a moment, GDB should stop on a crash. You can
+experiment with the `SDLFUZZ_EVENTS_PER_FRAME` environment variable to make the
+process quicker.
 
 ## Limitations and roadmap
 
