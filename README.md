@@ -3,7 +3,7 @@
 Fuzz SDL3 projects with random user input.
 
 This project is currently bare-bones and lacks many features. Nevertheless, it
-can be useful to experiment on and to fuzz real apps, although inefficiently.
+can be used to experiment on and [fuzz real apps](#bugs-found-with-sdl3fuzz).
 
 SDL3Fuzz is a personal project, and is not affiliated with SDL.
 
@@ -38,21 +38,21 @@ fine, including older versions, but they have not been tested.
 ```sh
 # Install the necessary development libraries as described in SDL's
 # `docs/README-linux.md` (or equivalent).
-$ git clone -b release-3.4.8 https://github.com/libsdl-org/SDL.git SDL3
-$ cd SDL3
-$ git apply /path/to/SDL3Fuzz/SDL_3.4.8.patch
-$ mkdir build && cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
-$ cmake --build . --parallel
-$ sudo cmake --install .
+git clone -b release-3.4.8 https://github.com/libsdl-org/SDL.git SDL3
+cd SDL3
+git apply /path/to/SDL3Fuzz/SDL_3.4.8.patch
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build . --parallel
+sudo cmake --install .
 ```
 
 Then, build SDL3Fuzz:
 
 ```sh
-$ mkdir build && cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=Debug
-$ cmake --build . --parallel
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+cmake --build . --parallel
 ```
 
 This should give you a library called `libsdl3fuzz.so` in the build folder.
@@ -73,13 +73,13 @@ it can mess with your system in many ways.
 
 To run the application with SDL3Fuzz, run:
 
-```
+```sh
 LD_PRELOAD=/path/to/SDL3Fuzz/build/libsdl3fuzz.so ./my_application
 ```
 
 Or, preferably, under a debugger:
 
-```
+```sh
 LD_PRELOAD=/path/to/SDL3Fuzz/build/libsdl3fuzz.so gdb ./my_application -ex run
 ```
 
@@ -94,6 +94,14 @@ Some environment variables can control how SDL3Fuzz behaves:
 - `SDLFUZZ_LOGLEVEL` specifies what SDL3Fuzz should print. Current values are 0
   for no logging (default) and 1 to log basic information (currently, only the
   seed).
+- `SDLFUZZ_OUT` specifies a path to a file where the events sent will be
+  recorded. This file can be used to reproduce crashes.
+- `SDLFUZZ_IN` specifies a path to a previously recorded output file. It will
+  re-run the same events in the same order. The fuzzed application must be
+  stable and reproducible for this to work.
+- `SDLFUZZ_RANDOM_EVENTS` specifies the amount of random events to generate in
+  total, after which SDL3Fuzz will emit only quit events. It is practical to set
+  this to 0 when reproducing a crash from an event recording.
 
 ## Examples
 
